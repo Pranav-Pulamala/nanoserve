@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Packaging
+dist/
+build/
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Visual Studio Code
+.vscode/

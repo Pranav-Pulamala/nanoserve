@@ -31,3 +31,11 @@ select = ["E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-config", "--strict-markers"]
+markers = [
+    "integration: tests that exercise interactions between components",
+    "gpu: tests that require a compatible GPU environment",
+]

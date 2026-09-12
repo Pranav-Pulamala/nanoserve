@@ -65,3 +65,41 @@ def linear(
         output = output + bias
 
     return np.asarray(output, dtype=np.float64)
+
+
+def softmax(inputs: FloatArray, axis: int = -1) -> FloatArray:
+    """Compute numerically stable softmax along an axis."""
+
+    if inputs.ndim == 0:
+        raise ValueError("inputs must have at least one dimension")
+
+    if axis < -inputs.ndim or axis >= inputs.ndim:
+        raise ValueError("axis is out of range for inputs")
+
+    shifted = inputs - np.max(inputs, axis=axis, keepdims=True)
+    exponentials = np.exp(shifted)
+    denominator = np.sum(exponentials, axis=axis, keepdims=True)
+    return np.asarray(exponentials / denominator, dtype=np.float64)
+
+
+def causal_mask(sequence_length: int) -> NDArray[np.bool_]:
+    """Return a lower-triangular attention mask with shape (T, T)."""
+
+    if sequence_length < 1:
+        raise ValueError("sequence_length must be positive")
+
+    return np.tril(np.ones((sequence_length, sequence_length), dtype=np.bool_))
+
+
+def apply_causal_mask(scores: FloatArray) -> FloatArray:
+    """Replace future-position scores with negative infinity.
+
+    Shape:
+        scores: (..., T, T)
+    """
+
+    if scores.ndim < 2 or scores.shape[-2] != scores.shape[-1]:
+        raise ValueError("scores must end with square (T, T) dimensions")
+
+    mask = causal_mask(scores.shape[-1])
+    return np.asarray(np.where(mask, scores, -np.inf), dtype=np.float64)

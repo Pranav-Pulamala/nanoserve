@@ -39,8 +39,6 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = [
-    "torch",
-    "torch.*",
     "transformers",
     "transformers.*",
 ]

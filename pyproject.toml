@@ -18,6 +18,8 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "torch>=2.6,<3",
+    "transformers>=4.46,<5",
 ]
 
 [tool.setuptools.packages.find]
@@ -33,6 +35,17 @@ select = ["E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+
+[[tool.mypy.overrides]]
+module = [
+    "torch",
+    "torch.*",
+    "transformers",
+    "transformers.*",
+]
+follow_imports = "skip"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

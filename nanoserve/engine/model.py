@@ -6,6 +6,7 @@ from torch import nn
 from nanoserve.engine.attention import GroupedQueryAttention
 from nanoserve.engine.cache import KVCache, LayerKVCache
 from nanoserve.engine.layers import RMSNorm, SwiGLU
+from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
 from nanoserve.engine.rope import positions_for_sequence
 from nanoserve.reference.llama.config import LlamaConfig
 
@@ -37,6 +38,8 @@ class LlamaDecoderBlock(nn.Module):
         positions: torch.Tensor,
         *,
         cache: LayerKVCache | None = None,
+        paged_cache: SequencePagedKVCache | None = None,
+        layer_index: int | None = None,
     ) -> torch.Tensor:
         """Apply one decoder block with optional layer-specific caching."""
 
@@ -51,6 +54,8 @@ class LlamaDecoderBlock(nn.Module):
             normalized_attention_input,
             positions,
             cache=cache,
+            paged_cache=paged_cache,
+            layer_index=layer_index,
         )
         attention_output, _ = attention_result
         attention_residual = inputs + attention_output
@@ -93,8 +98,9 @@ class LlamaModel(nn.Module):
         token_ids: torch.Tensor,
         *,
         cache: KVCache | None = None,
+        paged_cache: SequencePagedKVCache | None = None,
     ) -> torch.Tensor:
-        """Map token IDs to logits with optional per-layer KV caching."""
+        """Map token IDs to logits with optional K/V caching."""
 
         if token_ids.ndim != 2:
             raise ValueError("token_ids must have shape (B, T)")
@@ -113,6 +119,9 @@ class LlamaModel(nn.Module):
         if sequence_length < 1:
             raise ValueError("sequence length must be positive")
 
+        if cache is not None and paged_cache is not None:
+            raise ValueError("choose either contiguous or paged cache")
+
         parameter_device = self.embed_tokens.weight.device
 
         if token_ids.device != parameter_device:
@@ -123,11 +132,20 @@ class LlamaModel(nn.Module):
         if cache is not None:
             self._validate_cache(cache, batch_size)
             cache_length = cache.current_length
+        elif paged_cache is not None:
+            self._validate_paged_cache(paged_cache, batch_size)
+            cache_length = paged_cache.current_length
 
         total_sequence_length = cache_length + sequence_length
 
         if total_sequence_length > self.config.max_position_embeddings:
             raise ValueError("sequence length exceeds max_position_embeddings")
+
+        if (
+            paged_cache is not None
+            and total_sequence_length > paged_cache.max_sequence_length
+        ):
+            raise ValueError("sequence exceeds paged cache max_sequence_length")
 
         hidden: torch.Tensor = self.embed_tokens(token_ids)
         positions = positions_for_sequence(
@@ -136,14 +154,22 @@ class LlamaModel(nn.Module):
             device=token_ids.device,
         )
 
+        if paged_cache is not None:
+            paged_cache.begin_append(sequence_length)
+
         for layer_index, block in enumerate(self.layers):
             layer_cache = None if cache is None else cache[layer_index]
             block_output: torch.Tensor = block(
                 hidden,
                 positions,
                 cache=layer_cache,
+                paged_cache=paged_cache,
+                layer_index=layer_index if paged_cache is not None else None,
             )
             hidden = block_output
+
+        if paged_cache is not None:
+            paged_cache.finish_append()
 
         normalized: torch.Tensor = self.final_norm(hidden)
         logits: torch.Tensor = self.lm_head(normalized)
@@ -154,7 +180,7 @@ class LlamaModel(nn.Module):
         cache: KVCache,
         batch_size: int,
     ) -> None:
-        """Validate that a cache is compatible with this model call."""
+        """Validate a contiguous cache for this model call."""
 
         if len(cache) != self.config.num_hidden_layers:
             raise ValueError("cache layer count must match the model")
@@ -178,3 +204,37 @@ class LlamaModel(nn.Module):
 
         if cache.dtype != parameter.dtype:
             raise ValueError("cache dtype must match the model dtype")
+
+    def _validate_paged_cache(
+        self,
+        paged_cache: SequencePagedKVCache,
+        batch_size: int,
+    ) -> None:
+        """Validate a paged sequence cache for this model call."""
+
+        if batch_size != 1:
+            raise ValueError("paged model execution currently supports batch size 1")
+
+        storage = paged_cache.storage
+
+        if storage.num_layers != self.config.num_hidden_layers:
+            raise ValueError("paged cache layer count must match the model")
+
+        if storage.num_key_value_heads != self.config.num_key_value_heads:
+            raise ValueError("paged cache KV head count must match the model")
+
+        if storage.head_dim != self.config.head_dim:
+            raise ValueError("paged cache head_dim must match the model")
+
+        if paged_cache.max_sequence_length > self.config.max_position_embeddings:
+            raise ValueError(
+                "paged cache maximum cannot exceed max_position_embeddings"
+            )
+
+        parameter = self.embed_tokens.weight
+
+        if storage.device != parameter.device:
+            raise ValueError("paged cache device must match the model device")
+
+        if storage.dtype != parameter.dtype:
+            raise ValueError("paged cache dtype must match the model dtype")

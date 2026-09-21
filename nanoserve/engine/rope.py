@@ -3,6 +3,28 @@
 import torch
 
 
+def positions_for_sequence(
+    sequence_length: int,
+    *,
+    offset: int,
+    device: torch.device,
+) -> torch.Tensor:
+    """Return consecutive absolute positions for a sequence segment."""
+
+    if sequence_length < 1:
+        raise ValueError("sequence_length must be positive")
+
+    if offset < 0:
+        raise ValueError("offset must be nonnegative")
+
+    return torch.arange(
+        offset,
+        offset + sequence_length,
+        dtype=torch.int64,
+        device=device,
+    )
+
+
 def inverse_frequencies(
     head_dim: int,
     *,

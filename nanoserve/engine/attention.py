@@ -5,7 +5,7 @@ from math import sqrt
 import torch
 from torch import nn
 
-from nanoserve.engine.rope import apply_rope
+from nanoserve.engine.rope import apply_rope, positions_for_sequence
 from nanoserve.reference.llama.config import LlamaConfig
 
 
@@ -131,7 +131,9 @@ class GroupedQueryAttention(nn.Module):
     def forward(
         self,
         inputs: torch.Tensor,
-        positions: torch.Tensor,
+        positions: torch.Tensor | None = None,
+        *,
+        position_offset: int = 0,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply causal grouped-query attention to (B, T, D)."""
 
@@ -140,6 +142,18 @@ class GroupedQueryAttention(nn.Module):
 
         if inputs.shape[-1] != self.hidden_size:
             raise ValueError("inputs must use the configured hidden_size")
+
+        if position_offset < 0:
+            raise ValueError("position_offset must be nonnegative")
+
+        if positions is None:
+            positions = positions_for_sequence(
+                inputs.shape[1],
+                offset=position_offset,
+                device=inputs.device,
+            )
+        elif position_offset != 0:
+            raise ValueError("position_offset must be zero when positions are provided")
 
         if positions.shape != (inputs.shape[1],):
             raise ValueError("positions must have shape (T,)")

@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from nanoserve.engine.cache import LayerKVCache
+from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
 from nanoserve.engine.rope import apply_rope, positions_for_sequence
 from nanoserve.reference.llama.config import LlamaConfig
 
@@ -165,11 +166,16 @@ class GroupedQueryAttention(nn.Module):
         *,
         position_offset: int = 0,
         cache: LayerKVCache | None = None,
+        paged_cache: SequencePagedKVCache | None = None,
+        layer_index: int | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Apply grouped-query attention with optional K/V caching."""
+        """Apply GQA with optional contiguous or paged K/V caching."""
 
         if inputs.ndim != 3:
             raise ValueError("inputs must have shape (B, T, D)")
+
+        if inputs.shape[0] < 1 or inputs.shape[1] < 1:
+            raise ValueError("batch and sequence dimensions must be positive")
 
         if inputs.shape[-1] != self.hidden_size:
             raise ValueError("inputs must use the configured hidden_size")
@@ -177,18 +183,38 @@ class GroupedQueryAttention(nn.Module):
         if position_offset < 0:
             raise ValueError("position_offset must be nonnegative")
 
-        cache_length = 0
+        if cache is not None and paged_cache is not None:
+            raise ValueError("choose either contiguous or paged cache")
 
-        if cache is not None:
-            cache_length = cache.current_length
+        if paged_cache is not None:
+            if inputs.shape[0] != 1:
+                raise ValueError("paged attention currently supports batch size 1")
+
+            if layer_index is None:
+                raise ValueError("layer_index is required for paged attention")
 
             if position_offset != 0:
                 raise ValueError(
                     "position_offset must be zero when a cache is provided"
                 )
 
+        elif layer_index is not None:
+            raise ValueError("layer_index requires a paged cache")
+
+        if cache is not None and position_offset != 0:
+            raise ValueError("position_offset must be zero when a cache is provided")
+
+        cache_length = 0
+
+        if cache is not None:
+            cache_length = cache.current_length
+        elif paged_cache is not None:
+            cache_length = paged_cache.current_length
+
         expected_position_offset = (
-            cache_length if cache is not None else position_offset
+            cache_length
+            if cache is not None or paged_cache is not None
+            else position_offset
         )
 
         if positions is None:
@@ -203,10 +229,16 @@ class GroupedQueryAttention(nn.Module):
                     "position_offset must be zero when positions are provided"
                 )
 
-            if cache is not None:
+            if positions.shape != (inputs.shape[1],):
+                raise ValueError("positions must have shape (T,)")
+
+            if positions.device != inputs.device:
+                raise ValueError("positions and inputs must use the same device")
+
+            if cache is not None or paged_cache is not None:
                 expected_positions = positions_for_sequence(
                     inputs.shape[1],
-                    offset=expected_position_offset,
+                    offset=cache_length,
                     device=inputs.device,
                 )
 
@@ -214,12 +246,6 @@ class GroupedQueryAttention(nn.Module):
                     raise ValueError(
                         "positions must match the cache-aware absolute positions"
                     )
-
-        if positions.shape != (inputs.shape[1],):
-            raise ValueError("positions must have shape (T,)")
-
-        if positions.device != inputs.device:
-            raise ValueError("positions and inputs must use the same device")
 
         query_projection: torch.Tensor = self.q_proj(inputs)
         key_projection: torch.Tensor = self.k_proj(inputs)
@@ -250,6 +276,19 @@ class GroupedQueryAttention(nn.Module):
 
         if cache is not None:
             key, value = cache.append(key, value)
+        elif paged_cache is not None:
+            if layer_index is None:
+                raise RuntimeError("paged layer index disappeared")
+
+            paged_cache.write_layer(
+                layer_index,
+                key[0],
+                value[0],
+            )
+            key, value = paged_cache.read_layer(
+                layer_index,
+                include_pending=True,
+            )
 
         repeated_key = repeat_key_value(
             key,

@@ -5,6 +5,7 @@ from math import sqrt
 import torch
 from torch import nn
 
+from nanoserve.engine.cache import LayerKVCache
 from nanoserve.engine.rope import apply_rope, positions_for_sequence
 from nanoserve.reference.llama.config import LlamaConfig
 
@@ -53,39 +54,68 @@ def causal_attention(
     query: torch.Tensor,
     key: torch.Tensor,
     value: torch.Tensor,
+    *,
+    query_position_offset: int = 0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Compute explicit causal scaled dot-product attention."""
+    """Compute causal attention with possibly unequal query and key lengths."""
 
     if query.ndim != 4 or key.ndim != 4 or value.ndim != 4:
         raise ValueError("query, key, and value must have shape (B, H, T, Dh)")
 
-    if query.shape != key.shape:
-        raise ValueError("query and key shapes must match")
+    if query.shape[0] != key.shape[0]:
+        raise ValueError("query and key batch dimensions must match")
 
-    if key.shape[:-1] != value.shape[:-1]:
-        raise ValueError("key and value leading dimensions must match")
+    if query.shape[1] != key.shape[1]:
+        raise ValueError("query and key head counts must match")
+
+    if query.shape[-1] != key.shape[-1]:
+        raise ValueError("query and key head dimensions must match")
+
+    if key.shape != value.shape:
+        raise ValueError("key and value shapes must match")
 
     if query.device != key.device or key.device != value.device:
         raise ValueError("query, key, and value must use the same device")
 
-    sequence_length = query.shape[-2]
+    if query.dtype != key.dtype or key.dtype != value.dtype:
+        raise ValueError("query, key, and value must use the same dtype")
+
+    if query_position_offset < 0:
+        raise ValueError("query_position_offset must be nonnegative")
+
+    query_length = query.shape[-2]
+    key_length = key.shape[-2]
     head_dim = query.shape[-1]
+
+    if query_length < 1 or key_length < 1:
+        raise ValueError("query and key sequence lengths must be positive")
 
     if head_dim < 1:
         raise ValueError("head dimension must be positive")
+
+    if query_position_offset + query_length > key_length:
+        raise ValueError("query positions cannot exceed the key sequence length")
 
     scores = torch.matmul(
         query,
         key.transpose(-1, -2),
     ) / sqrt(head_dim)
 
-    mask = torch.ones(
-        sequence_length,
-        sequence_length,
-        dtype=torch.bool,
+    query_positions = torch.arange(
+        query_position_offset,
+        query_position_offset + query_length,
         device=scores.device,
-    ).tril()
-    scores = scores.masked_fill(~mask, float("-inf"))
+    )
+    key_positions = torch.arange(
+        key_length,
+        device=scores.device,
+    )
+    causal_mask = key_positions.unsqueeze(0) <= query_positions.unsqueeze(1)
+
+    scores = scores.masked_fill(
+        ~causal_mask[None, None, :, :],
+        float("-inf"),
+    )
     weights = torch.softmax(scores, dim=-1)
     output = torch.matmul(weights, value)
 
@@ -134,8 +164,9 @@ class GroupedQueryAttention(nn.Module):
         positions: torch.Tensor | None = None,
         *,
         position_offset: int = 0,
+        cache: LayerKVCache | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Apply causal grouped-query attention to (B, T, D)."""
+        """Apply grouped-query attention with optional K/V caching."""
 
         if inputs.ndim != 3:
             raise ValueError("inputs must have shape (B, T, D)")
@@ -146,14 +177,43 @@ class GroupedQueryAttention(nn.Module):
         if position_offset < 0:
             raise ValueError("position_offset must be nonnegative")
 
+        cache_length = 0
+
+        if cache is not None:
+            cache_length = cache.current_length
+
+            if position_offset != 0:
+                raise ValueError(
+                    "position_offset must be zero when a cache is provided"
+                )
+
+        expected_position_offset = (
+            cache_length if cache is not None else position_offset
+        )
+
         if positions is None:
             positions = positions_for_sequence(
                 inputs.shape[1],
-                offset=position_offset,
+                offset=expected_position_offset,
                 device=inputs.device,
             )
-        elif position_offset != 0:
-            raise ValueError("position_offset must be zero when positions are provided")
+        else:
+            if position_offset != 0:
+                raise ValueError(
+                    "position_offset must be zero when positions are provided"
+                )
+
+            if cache is not None:
+                expected_positions = positions_for_sequence(
+                    inputs.shape[1],
+                    offset=expected_position_offset,
+                    device=inputs.device,
+                )
+
+                if not torch.equal(positions, expected_positions):
+                    raise ValueError(
+                        "positions must match the cache-aware absolute positions"
+                    )
 
         if positions.shape != (inputs.shape[1],):
             raise ValueError("positions must have shape (T,)")
@@ -188,6 +248,9 @@ class GroupedQueryAttention(nn.Module):
             theta=self.rope_theta,
         )
 
+        if cache is not None:
+            key, value = cache.append(key, value)
+
         repeated_key = repeat_key_value(
             key,
             num_groups=self.num_key_value_groups,
@@ -201,6 +264,7 @@ class GroupedQueryAttention(nn.Module):
             query,
             repeated_key,
             repeated_value,
+            query_position_offset=cache_length,
         )
         merged = (
             attended.transpose(1, 2)

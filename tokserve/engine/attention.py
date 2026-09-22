@@ -6,8 +6,10 @@ import torch
 from torch import nn
 
 from tokserve.engine.cache import LayerKVCache
+from tokserve.engine.kernel_backend import KernelBackend
 from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 from tokserve.engine.rope import apply_rope, positions_for_sequence
+from tokserve.kernels.rope import triton_apply_rope
 from tokserve.reference.llama.config import LlamaConfig
 
 
@@ -126,9 +128,18 @@ def causal_attention(
 class GroupedQueryAttention(nn.Module):
     """Llama grouped-query self-attention."""
 
-    def __init__(self, config: LlamaConfig) -> None:
+    def __init__(
+        self,
+        config: LlamaConfig,
+        *,
+        backend: KernelBackend = "torch",
+    ) -> None:
         super().__init__()
 
+        if backend not in ("torch", "triton"):
+            raise ValueError("backend must be 'torch' or 'triton'")
+
+        self.backend = backend
         self.hidden_size = config.hidden_size
         self.num_attention_heads = config.num_attention_heads
         self.num_key_value_heads = config.num_key_value_heads
@@ -267,12 +278,20 @@ class GroupedQueryAttention(nn.Module):
             head_dim=self.head_dim,
         )
 
-        query, key = apply_rope(
-            query,
-            key,
-            positions,
-            theta=self.rope_theta,
-        )
+        if self.backend == "triton":
+            query, key = triton_apply_rope(
+                query,
+                key,
+                positions,
+                theta=self.rope_theta,
+            )
+        else:
+            query, key = apply_rope(
+                query,
+                key,
+                positions,
+                theta=self.rope_theta,
+            )
 
         if cache is not None:
             key, value = cache.append(key, value)

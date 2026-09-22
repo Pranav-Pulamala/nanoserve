@@ -5,6 +5,7 @@ from torch import nn
 
 from tokserve.engine.attention import GroupedQueryAttention
 from tokserve.engine.cache import KVCache, LayerKVCache
+from tokserve.engine.kernel_backend import KernelBackend, apply_rms_norm
 from tokserve.engine.layers import RMSNorm, SwiGLU
 from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 from tokserve.engine.rope import positions_for_sequence
@@ -14,15 +15,24 @@ from tokserve.reference.llama.config import LlamaConfig
 class LlamaDecoderBlock(nn.Module):
     """One pre-norm PyTorch Llama decoder block."""
 
-    def __init__(self, config: LlamaConfig) -> None:
+    def __init__(
+        self,
+        config: LlamaConfig,
+        *,
+        backend: KernelBackend = "torch",
+    ) -> None:
         super().__init__()
 
+        if backend not in ("torch", "triton"):
+            raise ValueError("backend must be 'torch' or 'triton'")
+
+        self.backend = backend
         self.hidden_size = config.hidden_size
         self.input_norm = RMSNorm(
             config.hidden_size,
             epsilon=config.rms_norm_eps,
         )
-        self.self_attention = GroupedQueryAttention(config)
+        self.self_attention = GroupedQueryAttention(config, backend=backend)
         self.post_attention_norm = RMSNorm(
             config.hidden_size,
             epsilon=config.rms_norm_eps,
@@ -49,7 +59,9 @@ class LlamaDecoderBlock(nn.Module):
         if inputs.shape[-1] != self.hidden_size:
             raise ValueError("inputs must use the configured hidden_size")
 
-        normalized_attention_input: torch.Tensor = self.input_norm(inputs)
+        normalized_attention_input = apply_rms_norm(
+            self.input_norm, inputs, self.backend
+        )
         attention_result: tuple[torch.Tensor, torch.Tensor] = self.self_attention(
             normalized_attention_input,
             positions,
@@ -60,8 +72,10 @@ class LlamaDecoderBlock(nn.Module):
         attention_output, _ = attention_result
         attention_residual = inputs + attention_output
 
-        normalized_mlp_input: torch.Tensor = self.post_attention_norm(
-            attention_residual
+        normalized_mlp_input = apply_rms_norm(
+            self.post_attention_norm,
+            attention_residual,
+            self.backend,
         )
         mlp_output: torch.Tensor = self.mlp(normalized_mlp_input)
 
@@ -71,16 +85,26 @@ class LlamaDecoderBlock(nn.Module):
 class LlamaModel(nn.Module):
     """Complete forward-only PyTorch Llama inference model."""
 
-    def __init__(self, config: LlamaConfig) -> None:
+    def __init__(
+        self,
+        config: LlamaConfig,
+        *,
+        backend: KernelBackend = "torch",
+    ) -> None:
         super().__init__()
 
+        if backend not in ("torch", "triton"):
+            raise ValueError("backend must be 'torch' or 'triton'")
+
         self.config = config
+        self.backend = backend
         self.embed_tokens = nn.Embedding(
             config.vocab_size,
             config.hidden_size,
         )
         self.layers = nn.ModuleList(
-            LlamaDecoderBlock(config) for _ in range(config.num_hidden_layers)
+            LlamaDecoderBlock(config, backend=backend)
+            for _ in range(config.num_hidden_layers)
         )
         self.final_norm = RMSNorm(
             config.hidden_size,
@@ -127,6 +151,12 @@ class LlamaModel(nn.Module):
         if token_ids.device != parameter_device:
             raise ValueError("token_ids and model parameters must use the same device")
 
+        if self.backend == "triton":
+            if parameter_device.type != "cuda":
+                raise ValueError("Triton backend requires CUDA")
+            if self.final_norm.weight.dtype != torch.float32:
+                raise TypeError("Triton backend requires float32 RMSNorm weights")
+
         cache_length = 0
 
         if cache is not None:
@@ -171,7 +201,7 @@ class LlamaModel(nn.Module):
         if paged_cache is not None:
             paged_cache.finish_append()
 
-        normalized: torch.Tensor = self.final_norm(hidden)
+        normalized = apply_rms_norm(self.final_norm, hidden, self.backend)
         logits: torch.Tensor = self.lm_head(normalized)
         return logits
 

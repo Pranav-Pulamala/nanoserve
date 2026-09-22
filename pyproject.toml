@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nanoserve"
+name = "tokserve"
 version = "0.1.0"
 description = "An educational from-scratch LLM inference engine."
 readme = "README.md"
@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["nanoserve*"]
+include = ["tokserve*"]
 
 [tool.ruff]
 target-version = "py311"
@@ -52,3 +52,7 @@ markers = [
     "integration: tests that exercise interactions between components",
     "gpu: tests that require a compatible GPU environment",
 ]
+
+[[tool.mypy.overrides]]
+module = ["triton", "triton.*"]
+ignore_missing_imports = true

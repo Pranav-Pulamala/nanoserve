@@ -1,7 +1,7 @@
 import torch
 
-from nanoserve.generation.generate import generate
-from nanoserve.generation.types import GenerationConfig
+from tokserve.generation.generate import generate
+from tokserve.generation.types import GenerationConfig
 
 
 class IncrementModel:

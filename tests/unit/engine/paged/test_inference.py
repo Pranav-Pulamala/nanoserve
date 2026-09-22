@@ -1,11 +1,11 @@
 import pytest
 import torch
 
-from nanoserve.engine.inference import decode, prefill
-from nanoserve.engine.model import LlamaModel
-from nanoserve.engine.paged.inference import decode_paged, prefill_paged
-from nanoserve.engine.paged.manager import PagedKVCacheManager
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.inference import decode, prefill
+from tokserve.engine.model import LlamaModel
+from tokserve.engine.paged.inference import decode_paged, prefill_paged
+from tokserve.engine.paged.manager import PagedKVCacheManager
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

@@ -3,14 +3,14 @@ import inspect
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.hf_bridge import (
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.hf_bridge import (
     REFERENCE_SEED,
     create_hugging_face_model,
     map_hugging_face_weights,
     to_hugging_face_config,
 )
-from nanoserve.reference.llama.model import llama_forward
+from tokserve.reference.llama.model import llama_forward
 
 
 def make_config() -> LlamaConfig:
@@ -27,7 +27,7 @@ def make_config() -> LlamaConfig:
     )
 
 
-def test_hugging_face_config_matches_nanoserve_config() -> None:
+def test_hugging_face_config_matches_tokserve_config() -> None:
     config = make_config()
 
     hugging_face_config = to_hugging_face_config(config)

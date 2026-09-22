@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from nanoserve.engine.cache import KVCache, LayerKVCache
+from tokserve.engine.cache import KVCache, LayerKVCache
 
 
 def create_layer_cache(

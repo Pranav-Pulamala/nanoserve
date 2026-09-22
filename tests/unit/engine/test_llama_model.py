@@ -2,8 +2,8 @@ import pytest
 import torch
 from torch.testing import assert_close
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def make_config(*, num_hidden_layers: int = 2) -> LlamaConfig:

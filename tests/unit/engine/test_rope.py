@@ -4,8 +4,8 @@ import torch
 from numpy.testing import assert_allclose
 from torch.testing import assert_close
 
-from nanoserve.engine.rope import apply_rope, rotate_half
-from nanoserve.reference.llama.rope import (
+from tokserve.engine.rope import apply_rope, rotate_half
+from tokserve.reference.llama.rope import (
     apply_rope as numpy_apply_rope,
 )
 

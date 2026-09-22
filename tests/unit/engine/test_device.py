@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from nanoserve.engine.device import (
+from tokserve.engine.device import (
     is_mps_available,
     resolve_device,
     resolve_dtype,

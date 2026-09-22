@@ -7,18 +7,18 @@ import torch
 from transformers import LlamaConfig as HFLlamaConfig
 from transformers import LlamaForCausalLM
 
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.model import (
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.model import (
     LlamaBlockWeights,
     LlamaModelWeights,
 )
-from nanoserve.reference.ops import FloatArray
+from tokserve.reference.ops import FloatArray
 
 REFERENCE_SEED = 17
 
 
 def to_hugging_face_config(config: LlamaConfig) -> HFLlamaConfig:
-    """Convert the minimal nanoserve configuration to Hugging Face."""
+    """Convert the minimal tokserve configuration to Hugging Face."""
 
     return HFLlamaConfig(
         vocab_size=config.vocab_size,
@@ -71,7 +71,7 @@ def map_hugging_face_weights(
     model: LlamaForCausalLM,
     config: LlamaConfig,
 ) -> LlamaModelWeights:
-    """Map Hugging Face Llama parameters into nanoserve containers."""
+    """Map Hugging Face Llama parameters into tokserve containers."""
 
     if model.config.num_hidden_layers != config.num_hidden_layers:
         raise ValueError("model and config layer counts must match")

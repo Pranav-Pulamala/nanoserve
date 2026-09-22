@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 import torch
 
-from nanoserve.engine.cache import KVCache
-from nanoserve.engine.model import LlamaModel
+from tokserve.engine.cache import KVCache
+from tokserve.engine.model import LlamaModel
 
 
 @dataclass(frozen=True)

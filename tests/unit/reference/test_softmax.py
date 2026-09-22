@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
-from nanoserve.reference.ops import apply_causal_mask, causal_mask, softmax
+from tokserve.reference.ops import apply_causal_mask, causal_mask, softmax
 
 
 def test_softmax_probabilities_sum_to_one() -> None:

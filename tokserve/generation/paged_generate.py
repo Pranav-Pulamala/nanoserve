@@ -2,12 +2,12 @@
 
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.engine.paged.inference import decode_paged, prefill_paged
-from nanoserve.engine.paged.manager import PagedKVCacheManager
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
-from nanoserve.generation.sampling import select_next_token
-from nanoserve.generation.types import (
+from tokserve.engine.model import LlamaModel
+from tokserve.engine.paged.inference import decode_paged, prefill_paged
+from tokserve.engine.paged.manager import PagedKVCacheManager
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.generation.sampling import select_next_token
+from tokserve.generation.types import (
     GenerationConfig,
     GenerationResult,
     StopReason,

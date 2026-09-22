@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from nanoserve.generation.sampling import select_next_token
-from nanoserve.generation.types import GenerationConfig
+from tokserve.generation.sampling import select_next_token
+from tokserve.generation.types import GenerationConfig
 
 
 @pytest.mark.parametrize(

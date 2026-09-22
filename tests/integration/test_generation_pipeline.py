@@ -1,9 +1,9 @@
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.generation.generate import generate
-from nanoserve.generation.types import GenerationConfig
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.generation.generate import generate
+from tokserve.generation.types import GenerationConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:
@@ -22,7 +22,7 @@ def tiny_config() -> LlamaConfig:
     )
 
 
-def test_real_nanoserve_model_generates_valid_token_ids() -> None:
+def test_real_tokserve_model_generates_valid_token_ids() -> None:
     torch.manual_seed(20)
     model = LlamaModel(tiny_config())
     model.eval()

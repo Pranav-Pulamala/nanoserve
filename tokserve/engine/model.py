@@ -3,12 +3,12 @@
 import torch
 from torch import nn
 
-from nanoserve.engine.attention import GroupedQueryAttention
-from nanoserve.engine.cache import KVCache, LayerKVCache
-from nanoserve.engine.layers import RMSNorm, SwiGLU
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
-from nanoserve.engine.rope import positions_for_sequence
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.attention import GroupedQueryAttention
+from tokserve.engine.cache import KVCache, LayerKVCache
+from tokserve.engine.layers import RMSNorm, SwiGLU
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.rope import positions_for_sequence
+from tokserve.reference.llama.config import LlamaConfig
 
 
 class LlamaDecoderBlock(nn.Module):

@@ -3,11 +3,11 @@ import pytest
 import torch
 from numpy.testing import assert_allclose
 
-from nanoserve.engine.layers import RMSNorm, SwiGLU
-from nanoserve.reference.llama.layers import (
+from tokserve.engine.layers import RMSNorm, SwiGLU
+from tokserve.reference.llama.layers import (
     rms_norm as numpy_rms_norm,
 )
-from nanoserve.reference.llama.layers import (
+from tokserve.reference.llama.layers import (
     swiglu as numpy_swiglu,
 )
 

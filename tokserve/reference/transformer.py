@@ -4,9 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from nanoserve.reference.attention import multi_head_attention
-from nanoserve.reference.layers import feed_forward, layer_norm
-from nanoserve.reference.ops import FloatArray, IntArray, embedding_lookup, linear
+from tokserve.reference.attention import multi_head_attention
+from tokserve.reference.layers import feed_forward, layer_norm
+from tokserve.reference.ops import FloatArray, IntArray, embedding_lookup, linear
 
 
 @dataclass(frozen=True)

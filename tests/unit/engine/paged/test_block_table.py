@@ -1,6 +1,6 @@
 import pytest
 
-from nanoserve.engine.paged.block_table import (
+from tokserve.engine.paged.block_table import (
     PhysicalTokenLocation,
     SequenceBlockTable,
 )

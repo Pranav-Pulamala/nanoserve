@@ -6,15 +6,15 @@ import torch
 from numpy.testing import assert_allclose
 from torch.testing import assert_close
 
-from nanoserve.engine.attention import (
+from tokserve.engine.attention import (
     GroupedQueryAttention,
     repeat_key_value,
     reshape_projection,
 )
-from nanoserve.reference.llama.attention import (
+from tokserve.reference.llama.attention import (
     grouped_query_attention as numpy_grouped_query_attention,
 )
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 RTOL = 1e-5
 ATOL = 1e-6
@@ -177,7 +177,7 @@ def test_attention_rejects_position_device_mismatch() -> None:
 def test_attention_math_is_explicit() -> None:
     source = inspect.getsource(
         __import__(
-            "nanoserve.engine.attention",
+            "tokserve.engine.attention",
             fromlist=["causal_attention"],
         ).causal_attention
     )

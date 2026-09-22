@@ -4,7 +4,7 @@ import torch
 import triton
 import triton.testing
 
-from nanoserve.kernels.vector import vector_add
+from tokserve.kernels.vector import vector_add
 
 
 def main() -> None:

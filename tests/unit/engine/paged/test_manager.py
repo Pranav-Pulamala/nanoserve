@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from nanoserve.engine.paged.manager import PagedKVCacheManager
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.paged.manager import PagedKVCacheManager
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 
 
 def create_manager(

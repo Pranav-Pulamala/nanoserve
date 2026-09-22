@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from nanoserve.reference.layers import feed_forward, gelu, layer_norm
+from tokserve.reference.layers import feed_forward, gelu, layer_norm
 
 
 def test_layer_norm_has_zero_mean_and_unit_variance() -> None:

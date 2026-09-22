@@ -1,12 +1,12 @@
 import pytest
 import torch
 
-from nanoserve.engine.paged.allocator import (
+from tokserve.engine.paged.allocator import (
     BlockExhaustedError,
     PhysicalBlockAllocator,
 )
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
-from nanoserve.engine.paged.storage import PagedKVStorage
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.paged.storage import PagedKVStorage
 
 
 def create_cache(

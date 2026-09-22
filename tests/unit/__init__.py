@@ -1,1 +1,1 @@
-"""Unit tests for nanoserve."""
+"""Unit tests for tokserve."""

@@ -37,7 +37,7 @@ jobs:
         run: python -m pip install -e ".[dev]"
 
       - name: Verify package
-        run: python -c "import nanoserve; assert nanoserve.__version__ == '0.1.0'"
+        run: python -c "import tokserve; assert tokserve.__version__ == '0.1.0'"
 
       - name: Run Ruff lint
         run: python -m ruff check .
@@ -46,7 +46,7 @@ jobs:
         run: python -m ruff format --check .
 
       - name: Run mypy
-        run: python -m mypy nanoserve benchmarks
+        run: python -m mypy tokserve benchmarks
 
       - name: Run tests
         run: python -m pytest

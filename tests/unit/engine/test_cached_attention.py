@@ -1,11 +1,11 @@
 import torch
 
-from nanoserve.engine.attention import (
+from tokserve.engine.attention import (
     GroupedQueryAttention,
     causal_attention,
 )
-from nanoserve.engine.cache import LayerKVCache
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.cache import LayerKVCache
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

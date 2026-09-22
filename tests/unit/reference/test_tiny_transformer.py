@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from nanoserve.reference.transformer import (
+from tokserve.reference.transformer import (
     TinyTransformerConfig,
     TinyTransformerWeights,
     TransformerBlockWeights,

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from nanoserve.reference.ops import FloatArray, IntArray
+from tokserve.reference.ops import FloatArray, IntArray
 
 
 def inverse_frequencies(

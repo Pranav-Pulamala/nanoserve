@@ -1,12 +1,12 @@
 import pytest
 import torch
 
-from nanoserve.engine.attention import GroupedQueryAttention
-from nanoserve.engine.cache import LayerKVCache
-from nanoserve.engine.paged.allocator import PhysicalBlockAllocator
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
-from nanoserve.engine.paged.storage import PagedKVStorage
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.attention import GroupedQueryAttention
+from tokserve.engine.cache import LayerKVCache
+from tokserve.engine.paged.allocator import PhysicalBlockAllocator
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.paged.storage import PagedKVStorage
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

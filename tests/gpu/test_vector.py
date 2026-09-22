@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from nanoserve.kernels.vector import vector_add
+from tokserve.kernels.vector import vector_add
 
 
 @pytest.mark.gpu

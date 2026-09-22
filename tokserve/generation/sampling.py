@@ -2,14 +2,14 @@
 
 import torch
 
-from nanoserve.generation.greedy import select_greedy
-from nanoserve.generation.temperature import (
+from tokserve.generation.greedy import select_greedy
+from tokserve.generation.temperature import (
     sample_from_logits,
     scale_temperature,
 )
-from nanoserve.generation.top_k import filter_top_k
-from nanoserve.generation.top_p import filter_top_p
-from nanoserve.generation.types import GenerationConfig
+from tokserve.generation.top_k import filter_top_k
+from tokserve.generation.top_p import filter_top_p
+from tokserve.generation.types import GenerationConfig
 
 
 def select_next_token(

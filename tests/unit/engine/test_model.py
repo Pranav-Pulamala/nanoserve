@@ -4,12 +4,12 @@ import torch
 from numpy.testing import assert_allclose
 from torch.testing import assert_close
 
-from nanoserve.engine.model import LlamaDecoderBlock
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.model import (
+from tokserve.engine.model import LlamaDecoderBlock
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.model import (
     LlamaBlockWeights,
 )
-from nanoserve.reference.llama.model import (
+from tokserve.reference.llama.model import (
     llama_block as numpy_llama_block,
 )
 

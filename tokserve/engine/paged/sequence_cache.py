@@ -2,9 +2,9 @@
 
 import torch
 
-from nanoserve.engine.paged.allocator import PhysicalBlockAllocator
-from nanoserve.engine.paged.block_table import SequenceBlockTable
-from nanoserve.engine.paged.storage import PagedKVStorage
+from tokserve.engine.paged.allocator import PhysicalBlockAllocator
+from tokserve.engine.paged.block_table import SequenceBlockTable
+from tokserve.engine.paged.storage import PagedKVStorage
 
 
 class SequencePagedKVCache:

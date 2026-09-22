@@ -1,1 +1,1 @@
-"""GPU tests for nanoserve."""
+"""GPU tests for tokserve."""

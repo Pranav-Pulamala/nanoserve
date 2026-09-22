@@ -1,1 +1,1 @@
-"""Integration tests for nanoserve."""
+"""Integration tests for tokserve."""

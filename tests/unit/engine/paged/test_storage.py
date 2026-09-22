@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from nanoserve.engine.paged.storage import PagedKVStorage
+from tokserve.engine.paged.storage import PagedKVStorage
 
 
 def create_storage(

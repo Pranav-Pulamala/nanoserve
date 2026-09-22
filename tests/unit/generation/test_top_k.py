@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from nanoserve.generation.temperature import sample_from_logits
-from nanoserve.generation.top_k import filter_top_k
+from tokserve.generation.temperature import sample_from_logits
+from tokserve.generation.top_k import filter_top_k
 
 
 def test_top_k_retains_highest_logits() -> None:

@@ -3,14 +3,14 @@ from unittest.mock import call, patch
 import pytest
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.engine.paged.allocator import BlockExhaustedError
-from nanoserve.engine.paged.manager import PagedKVCacheManager
-from nanoserve.generation.cached_generate import generate_with_cache
-from nanoserve.generation.generate import generate
-from nanoserve.generation.paged_generate import generate_with_paged_cache
-from nanoserve.generation.types import GenerationConfig
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.engine.paged.allocator import BlockExhaustedError
+from tokserve.engine.paged.manager import PagedKVCacheManager
+from tokserve.generation.cached_generate import generate_with_cache
+from tokserve.generation.generate import generate
+from tokserve.generation.paged_generate import generate_with_paged_cache
+from tokserve.generation.types import GenerationConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

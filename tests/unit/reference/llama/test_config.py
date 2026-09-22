@@ -2,7 +2,7 @@ from dataclasses import replace
 
 import pytest
 
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def make_config() -> LlamaConfig:

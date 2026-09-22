@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
-from nanoserve.reference.llama.rope import (
+from tokserve.reference.llama.rope import (
     apply_rope,
     inverse_frequencies,
     rotary_cos_sin,

@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from nanoserve.generation.greedy import select_greedy
-from nanoserve.generation.types import GenerationConfig
+from tokserve.generation.greedy import select_greedy
+from tokserve.generation.types import GenerationConfig
 
 
 def test_select_greedy_chooses_highest_logit_for_each_batch_row() -> None:

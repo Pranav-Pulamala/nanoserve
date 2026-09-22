@@ -1,5 +1,5 @@
-import nanoserve
+import tokserve
 
 
 def test_package_version() -> None:
-    assert nanoserve.__version__ == "0.1.0"
+    assert tokserve.__version__ == "0.1.0"

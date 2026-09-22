@@ -3,8 +3,8 @@
 import pytest
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:
@@ -24,7 +24,7 @@ def tiny_config() -> LlamaConfig:
 
 
 def run_model_on_device(device: torch.device) -> torch.Tensor:
-    """Run the complete nanoserve model on the requested device."""
+    """Run the complete tokserve model on the requested device."""
 
     model = LlamaModel(tiny_config()).to(device)
     model.eval()

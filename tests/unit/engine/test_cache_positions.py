@@ -1,9 +1,9 @@
 import pytest
 import torch
 
-from nanoserve.engine.attention import GroupedQueryAttention
-from nanoserve.engine.rope import apply_rope, positions_for_sequence
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.attention import GroupedQueryAttention
+from tokserve.engine.rope import apply_rope, positions_for_sequence
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

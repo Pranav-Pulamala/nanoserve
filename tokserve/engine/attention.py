@@ -5,10 +5,10 @@ from math import sqrt
 import torch
 from torch import nn
 
-from nanoserve.engine.cache import LayerKVCache
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
-from nanoserve.engine.rope import apply_rope, positions_for_sequence
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.cache import LayerKVCache
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.rope import apply_rope, positions_for_sequence
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def reshape_projection(

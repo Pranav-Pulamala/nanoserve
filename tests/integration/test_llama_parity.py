@@ -5,15 +5,15 @@ import numpy as np
 import torch
 from numpy.testing import assert_allclose, assert_array_equal
 
-from nanoserve.reference.llama.attention import grouped_query_attention
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.hf_bridge import (
+from tokserve.reference.llama.attention import grouped_query_attention
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.hf_bridge import (
     create_hugging_face_model,
     map_hugging_face_weights,
 )
-from nanoserve.reference.llama.layers import rms_norm, swiglu
-from nanoserve.reference.llama.model import llama_block, llama_forward
-from nanoserve.reference.ops import FloatArray
+from tokserve.reference.llama.layers import rms_norm, swiglu
+from tokserve.reference.llama.model import llama_block, llama_forward
+from tokserve.reference.ops import FloatArray
 
 RTOL = 1e-4
 ATOL = 1e-5

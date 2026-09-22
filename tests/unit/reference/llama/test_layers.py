@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from nanoserve.reference.layers import layer_norm
-from nanoserve.reference.llama.layers import rms_norm, silu, swiglu
+from tokserve.reference.layers import layer_norm
+from tokserve.reference.llama.layers import rms_norm, silu, swiglu
 
 
 def test_rms_norm_matches_small_manual_example() -> None:

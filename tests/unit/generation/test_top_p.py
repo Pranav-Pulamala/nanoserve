@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from nanoserve.generation.temperature import sample_from_logits
-from nanoserve.generation.top_p import filter_top_p
+from tokserve.generation.temperature import sample_from_logits
+from tokserve.generation.top_p import filter_top_p
 
 
 def test_top_p_keeps_token_that_crosses_threshold() -> None:

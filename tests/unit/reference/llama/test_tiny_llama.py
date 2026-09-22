@@ -2,14 +2,14 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.layers import rms_norm
-from nanoserve.reference.llama.model import (
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.layers import rms_norm
+from tokserve.reference.llama.model import (
     LlamaBlockWeights,
     LlamaModelWeights,
     llama_forward,
 )
-from nanoserve.reference.ops import linear
+from tokserve.reference.ops import linear
 
 
 def make_config(*, num_hidden_layers: int = 2) -> LlamaConfig:

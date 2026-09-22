@@ -1,14 +1,14 @@
 import pytest
 import torch
 
-from nanoserve.engine.cache import KVCache
-from nanoserve.engine.inference import (
+from tokserve.engine.cache import KVCache
+from tokserve.engine.inference import (
     create_kv_cache,
     decode,
     prefill,
 )
-from nanoserve.engine.model import LlamaModel
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

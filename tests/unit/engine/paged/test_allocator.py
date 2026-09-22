@@ -1,6 +1,6 @@
 import pytest
 
-from nanoserve.engine.paged.allocator import (
+from tokserve.engine.paged.allocator import (
     BlockExhaustedError,
     PhysicalBlockAllocator,
 )

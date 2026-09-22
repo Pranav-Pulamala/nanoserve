@@ -1,10 +1,10 @@
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.generation.cached_generate import generate_with_cache
-from nanoserve.generation.generate import generate
-from nanoserve.generation.types import GenerationConfig
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.engine.model import LlamaModel
+from tokserve.generation.cached_generate import generate_with_cache
+from tokserve.generation.generate import generate
+from tokserve.generation.types import GenerationConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def tiny_config() -> LlamaConfig:

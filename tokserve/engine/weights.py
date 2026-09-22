@@ -3,12 +3,12 @@
 import numpy as np
 import torch
 
-from nanoserve.engine.model import LlamaDecoderBlock, LlamaModel
-from nanoserve.reference.llama.model import (
+from tokserve.engine.model import LlamaDecoderBlock, LlamaModel
+from tokserve.reference.llama.model import (
     LlamaBlockWeights,
     LlamaModelWeights,
 )
-from nanoserve.reference.ops import FloatArray
+from tokserve.reference.ops import FloatArray
 
 
 def copy_parameter(

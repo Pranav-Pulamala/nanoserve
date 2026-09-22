@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from nanoserve.reference.ops import FloatArray, linear
+from tokserve.reference.ops import FloatArray, linear
 
 
 def rms_norm(

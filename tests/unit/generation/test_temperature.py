@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from nanoserve.generation.temperature import (
+from tokserve.generation.temperature import (
     sample_from_logits,
     scale_temperature,
 )

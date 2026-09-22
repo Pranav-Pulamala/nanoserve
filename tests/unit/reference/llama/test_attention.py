@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
-from nanoserve.reference.llama.attention import (
+from tokserve.reference.llama.attention import (
     grouped_query_attention,
     repeat_key_value,
     reshape_projection,
 )
-from nanoserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.config import LlamaConfig
 
 
 def make_config() -> LlamaConfig:

@@ -4,10 +4,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from nanoserve.reference.llama.attention import grouped_query_attention
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.layers import rms_norm, swiglu
-from nanoserve.reference.ops import (
+from tokserve.reference.llama.attention import grouped_query_attention
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.layers import rms_norm, swiglu
+from tokserve.reference.ops import (
     FloatArray,
     IntArray,
     embedding_lookup,

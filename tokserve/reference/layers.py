@@ -4,7 +4,7 @@ from math import sqrt
 
 import numpy as np
 
-from nanoserve.reference.ops import FloatArray, linear
+from tokserve.reference.ops import FloatArray, linear
 
 
 def layer_norm(

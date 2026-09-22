@@ -1,1 +1,1 @@
-"""Reproducible benchmark utilities for nanoserve."""
+"""Reproducible benchmark utilities for tokserve."""

@@ -1,5 +1,5 @@
-import nanoserve.nn
+import tokserve.nn
 
 
 def test_nn_package_is_importable() -> None:
-    assert nanoserve.nn.__name__ == "nanoserve.nn"
+    assert tokserve.nn.__name__ == "tokserve.nn"

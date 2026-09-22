@@ -4,7 +4,7 @@ from math import sqrt
 
 import numpy as np
 
-from nanoserve.reference.ops import (
+from tokserve.reference.ops import (
     FloatArray,
     apply_causal_mask,
     linear,

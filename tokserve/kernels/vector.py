@@ -33,9 +33,9 @@ def vector_add(
     if x.numel() == 0:
         return torch.empty_like(x)
 
-    # Import only when this CUDA operation is called. Importing nanoserve on
+    # Import only when this CUDA operation is called. Importing tokserve on
     # a Mac must not require the optional Triton package.
-    from nanoserve.kernels._triton_vector import launch_vector_add
+    from tokserve.kernels._triton_vector import launch_vector_add
 
     output: torch.Tensor = launch_vector_add(x, y)
     return output

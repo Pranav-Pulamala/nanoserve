@@ -4,9 +4,9 @@ from dataclasses import dataclass
 
 import torch
 
-from nanoserve.engine.model import LlamaModel
-from nanoserve.engine.paged.manager import PagedKVCacheManager
-from nanoserve.engine.paged.sequence_cache import SequencePagedKVCache
+from tokserve.engine.model import LlamaModel
+from tokserve.engine.paged.manager import PagedKVCacheManager
+from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 
 
 @dataclass(frozen=True)

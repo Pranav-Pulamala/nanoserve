@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
-from nanoserve.reference.attention import scaled_dot_product_attention
+from tokserve.reference.attention import scaled_dot_product_attention
 
 
 def test_attention_has_expected_shapes_and_values() -> None:

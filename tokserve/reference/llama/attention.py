@@ -2,13 +2,13 @@
 
 import numpy as np
 
-from nanoserve.reference.attention import (
+from tokserve.reference.attention import (
     merge_heads,
     scaled_dot_product_attention,
 )
-from nanoserve.reference.llama.config import LlamaConfig
-from nanoserve.reference.llama.rope import apply_rope
-from nanoserve.reference.ops import FloatArray, IntArray, linear
+from tokserve.reference.llama.config import LlamaConfig
+from tokserve.reference.llama.rope import apply_rope
+from tokserve.reference.ops import FloatArray, IntArray, linear
 
 
 def reshape_projection(

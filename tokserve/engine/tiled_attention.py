@@ -102,24 +102,68 @@ def tiled_attention_reference(
                 float("-inf"),
             )
 
-            tile_max = scores.max(dim=-1, keepdim=True).values
-            new_max = torch.maximum(running_max, tile_max)
-
-            previous_scale = torch.exp(running_max - new_max)
-            probabilities = torch.exp(scores - new_max)
-
-            running_sum = previous_scale * running_sum + probabilities.sum(
-                dim=-1, keepdim=True
+            running_max, running_sum, accumulator = online_softmax_update(
+                running_max,
+                running_sum,
+                accumulator,
+                scores,
+                value_tile,
             )
-            accumulator = previous_scale * accumulator + torch.matmul(
-                probabilities, value_tile
-            )
-            running_max = new_max
 
         normalized = accumulator / running_sum
         output[:, :, query_start:query_end, :] = normalized.to(query.dtype)
 
     return output
+
+
+def online_softmax_update(
+    running_max: torch.Tensor,
+    running_sum: torch.Tensor,
+    accumulator: torch.Tensor,
+    scores: torch.Tensor,
+    values: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Incorporate one score/value tile into online-softmax state.
+
+    Shapes:
+        running_max: (..., M, 1)
+        running_sum: (..., M, 1)
+        accumulator: (..., M, D)
+        scores: (..., M, N)
+        values: (..., N, D)
+    """
+
+    if running_max.shape != running_sum.shape:
+        raise ValueError("running_max and running_sum shapes must match")
+
+    if running_max.shape[-1] != 1:
+        raise ValueError("running maximum and sum must end with dimension 1")
+
+    if scores.shape[:-1] != running_max.shape[:-1]:
+        raise ValueError("scores must match the running query dimensions")
+
+    if accumulator.shape[:-1] != running_max.shape[:-1]:
+        raise ValueError("accumulator must match the running query dimensions")
+
+    if scores.shape[:-2] != values.shape[:-2]:
+        raise ValueError("scores and values batch dimensions must match")
+
+    if scores.shape[-1] != values.shape[-2]:
+        raise ValueError("score width must match the value tile length")
+
+    if accumulator.shape[-1] != values.shape[-1]:
+        raise ValueError("accumulator and values must use the same value size")
+
+    tile_max = scores.max(dim=-1, keepdim=True).values
+    new_max = torch.maximum(running_max, tile_max)
+
+    previous_scale = torch.exp(running_max - new_max)
+    probabilities = torch.exp(scores - new_max)
+
+    new_sum = previous_scale * running_sum + probabilities.sum(dim=-1, keepdim=True)
+    new_accumulator = previous_scale * accumulator + torch.matmul(probabilities, values)
+
+    return new_max, new_sum, new_accumulator
 
 
 def _validate_inputs(

@@ -48,8 +48,12 @@ def triton_tiled_attention(
     if query.device != key.device or key.device != value.device:
         raise ValueError("query, key, and value must use the same device")
 
-    if query.dtype != torch.float32:
-        raise TypeError("first Triton tiled-attention kernel requires float32")
+    if query.dtype not in (
+        torch.float32,
+        torch.float16,
+        torch.bfloat16,
+    ):
+        raise TypeError("query, key, and value must use float32, float16, or bfloat16")
 
     if key.dtype != query.dtype or value.dtype != query.dtype:
         raise ValueError("query, key, and value must use the same dtype")

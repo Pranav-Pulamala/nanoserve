@@ -88,6 +88,18 @@ class PagedKVStorage:
         self._key_storage[layer_index, block_id, :, offset, :].copy_(keys)
         self._value_storage[layer_index, block_id, :, offset, :].copy_(values)
 
+    @property
+    def key_storage(self) -> torch.Tensor:
+        """Return the physical key tensor for kernel execution."""
+
+        return self._key_storage
+
+    @property
+    def value_storage(self) -> torch.Tensor:
+        """Return the physical value tensor for kernel execution."""
+
+        return self._value_storage
+
     def read_token(
         self,
         *,

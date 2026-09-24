@@ -9,6 +9,7 @@ from tokserve.engine.cache import LayerKVCache
 from tokserve.engine.kernel_backend import KernelBackend
 from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 from tokserve.engine.rope import apply_rope, positions_for_sequence
+from tokserve.kernels.paged_attention import triton_paged_attention
 from tokserve.kernels.rope import triton_apply_rope
 from tokserve.kernels.tiled_attention import triton_tiled_attention
 from tokserve.reference.llama.config import LlamaConfig
@@ -305,18 +306,33 @@ class GroupedQueryAttention(nn.Module):
                 key[0],
                 value[0],
             )
-            key, value = paged_cache.read_layer(
-                layer_index,
-                include_pending=True,
-            )
+
+            if self.backend == "torch":
+                key, value = paged_cache.read_layer(
+                    layer_index,
+                    include_pending=True,
+                )
 
         if self.backend == "triton":
-            attended = triton_tiled_attention(
-                query,
-                key,
-                value,
-                query_position_offset=cache_length,
-            )
+            if paged_cache is not None:
+                if layer_index is None:
+                    raise RuntimeError("paged layer index disappeared")
+
+                attended = triton_paged_attention(
+                    query,
+                    paged_cache.storage,
+                    paged_cache.block_ids,
+                    layer_index=layer_index,
+                    key_length=cache_length + inputs.shape[1],
+                    query_position_offset=cache_length,
+                )
+            else:
+                attended = triton_tiled_attention(
+                    query,
+                    key,
+                    value,
+                    query_position_offset=cache_length,
+                )
             attention_weights = torch.empty(
                 0,
                 device=inputs.device,

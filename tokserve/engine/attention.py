@@ -10,6 +10,7 @@ from tokserve.engine.kernel_backend import KernelBackend
 from tokserve.engine.paged.sequence_cache import SequencePagedKVCache
 from tokserve.engine.rope import apply_rope, positions_for_sequence
 from tokserve.kernels.rope import triton_apply_rope
+from tokserve.kernels.tiled_attention import triton_tiled_attention
 from tokserve.reference.llama.config import LlamaConfig
 
 
@@ -309,21 +310,34 @@ class GroupedQueryAttention(nn.Module):
                 include_pending=True,
             )
 
-        repeated_key = repeat_key_value(
-            key,
-            num_groups=self.num_key_value_groups,
-        )
-        repeated_value = repeat_key_value(
-            value,
-            num_groups=self.num_key_value_groups,
-        )
+        if self.backend == "triton":
+            attended = triton_tiled_attention(
+                query,
+                key,
+                value,
+                query_position_offset=cache_length,
+            )
+            attention_weights = torch.empty(
+                0,
+                device=inputs.device,
+                dtype=inputs.dtype,
+            )
+        else:
+            repeated_key = repeat_key_value(
+                key,
+                num_groups=self.num_key_value_groups,
+            )
+            repeated_value = repeat_key_value(
+                value,
+                num_groups=self.num_key_value_groups,
+            )
 
-        attended, attention_weights = causal_attention(
-            query,
-            repeated_key,
-            repeated_value,
-            query_position_offset=cache_length,
-        )
+            attended, attention_weights = causal_attention(
+                query,
+                repeated_key,
+                repeated_value,
+                query_position_offset=cache_length,
+            )
         merged = (
             attended.transpose(1, 2)
             .contiguous()

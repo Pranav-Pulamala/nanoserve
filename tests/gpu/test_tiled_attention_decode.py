@@ -52,15 +52,19 @@ def make_models() -> tuple[LlamaModel, LlamaModel]:
     return reference, optimized
 
 
-def create_layer_cache(config: LlamaConfig) -> LayerKVCache:
-    """Create one CUDA cache for direct attention testing."""
+def create_layer_cache(
+    config: LlamaConfig,
+    *,
+    device: torch.device,
+) -> LayerKVCache:
+    """Create one layer cache on the exact requested CUDA device."""
 
     return LayerKVCache(
         batch_size=1,
         num_key_value_heads=config.num_key_value_heads,
         max_sequence_length=config.max_position_embeddings,
         head_dim=config.head_dim,
-        device=torch.device("cuda"),
+        device=device,
         dtype=torch.float32,
     )
 
@@ -182,7 +186,10 @@ def test_triton_attention_preserves_hkv_cache_and_omits_weights() -> None:
         config,
         backend="triton",
     ).to("cuda")
-    cache = create_layer_cache(config)
+    cache = create_layer_cache(
+        config,
+        device=attention.q_proj.weight.device,
+    )
     prompt = torch.randn(
         1,
         5,

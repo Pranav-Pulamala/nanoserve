@@ -19,6 +19,7 @@ def _tiled_attention_kernel(
     key_length: tl.constexpr,
     head_dim: tl.constexpr,
     query_position_offset: tl.constexpr,
+    num_key_value_groups: tl.constexpr,
     scale: tl.constexpr,
     stride_q_batch: tl.constexpr,
     stride_q_head: tl.constexpr,
@@ -41,8 +42,9 @@ def _tiled_attention_kernel(
     block_d: tl.constexpr,
 ):
     query_block = tl.program_id(0)
-    head = tl.program_id(1)
+    query_head = tl.program_id(1)
     batch = tl.program_id(2)
+    key_value_head = query_head // num_key_value_groups
 
     query_offsets = query_block * block_m + tl.arange(0, block_m)
     dimension_offsets = tl.arange(0, block_d)
@@ -52,7 +54,7 @@ def _tiled_attention_kernel(
     query_addresses = (
         query_ptr
         + batch * stride_q_batch
-        + head * stride_q_head
+        + query_head * stride_q_head
         + query_offsets[:, None] * stride_q_sequence
         + dimension_offsets[None, :] * stride_q_dimension
     )
@@ -75,14 +77,14 @@ def _tiled_attention_kernel(
         key_addresses = (
             key_ptr
             + batch * stride_k_batch
-            + head * stride_k_head
+            + key_value_head * stride_k_head
             + key_offsets[:, None] * stride_k_sequence
             + dimension_offsets[None, :] * stride_k_dimension
         )
         value_addresses = (
             value_ptr
             + batch * stride_v_batch
-            + head * stride_v_head
+            + key_value_head * stride_v_head
             + key_offsets[:, None] * stride_v_sequence
             + dimension_offsets[None, :] * stride_v_dimension
         )
@@ -128,7 +130,7 @@ def _tiled_attention_kernel(
     output_addresses = (
         output_ptr
         + batch * stride_o_batch
-        + head * stride_o_head
+        + query_head * stride_o_head
         + query_offsets[:, None] * stride_o_sequence
         + dimension_offsets[None, :] * stride_o_dimension
     )
@@ -150,14 +152,16 @@ def launch_tiled_attention(
 ) -> torch.Tensor:
     """Launch causal tiled attention for contiguous (B, H, T, Dh) tensors."""
 
-    batch_size, num_heads, query_length, head_dim = query.shape
+    batch_size, num_query_heads, query_length, head_dim = query.shape
+    num_key_value_heads = key.shape[1]
     key_length = key.shape[2]
+    num_key_value_groups = num_query_heads // num_key_value_heads
     block_d = triton.next_power_of_2(head_dim)
 
     output = torch.empty_like(query)
     grid = (
         triton.cdiv(query_length, block_m),
-        num_heads,
+        num_query_heads,
         batch_size,
     )
 
@@ -170,6 +174,7 @@ def launch_tiled_attention(
         key_length,
         head_dim,
         query_position_offset,
+        num_key_value_groups,
         1.0 / sqrt(head_dim),
         *query.stride(),
         *key.stride(),

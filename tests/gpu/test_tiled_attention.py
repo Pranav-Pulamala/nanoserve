@@ -99,10 +99,77 @@ def test_kernel_handles_noncontiguous_input_views() -> None:
     assert_close(actual, expected, rtol=1e-4, atol=1e-5)
 
 
-def test_first_kernel_explicitly_rejects_gqa() -> None:
-    query = torch.randn(1, 4, 7, 8, device="cuda")
+@pytest.mark.parametrize(
+    ("num_query_heads", "num_key_value_heads"),
+    [
+        (2, 2),
+        (4, 2),
+        (8, 2),
+        (8, 1),
+    ],
+)
+def test_triton_tiled_attention_supports_gqa(
+    num_query_heads: int,
+    num_key_value_heads: int,
+) -> None:
+    torch.manual_seed(402)
+    query = torch.randn(
+        1,
+        num_query_heads,
+        19,
+        8,
+        device="cuda",
+    )
+    key = torch.randn(
+        1,
+        num_key_value_heads,
+        19,
+        8,
+        device="cuda",
+    )
+    value = torch.randn(
+        1,
+        num_key_value_heads,
+        19,
+        8,
+        device="cuda",
+    )
+
+    groups = num_query_heads // num_key_value_heads
+    expanded_key = key.repeat_interleave(groups, dim=1)
+    expanded_value = value.repeat_interleave(groups, dim=1)
+    expected, _ = causal_attention(
+        query,
+        expanded_key,
+        expanded_value,
+    )
+    actual = triton_tiled_attention(query, key, value)
+
+    assert_close(actual, expected, rtol=1e-4, atol=1e-5)
+
+
+def test_gqa_mapping_uses_head_distinct_values() -> None:
+    query = torch.zeros(1, 4, 1, 8, device="cuda")
+    key = torch.zeros(1, 2, 1, 8, device="cuda")
+    value = torch.empty(1, 2, 1, 8, device="cuda")
+    value[:, 0, :, :] = 10.0
+    value[:, 1, :, :] = 20.0
+
+    actual = triton_tiled_attention(query, key, value)
+
+    assert_close(actual[:, 0], torch.full_like(actual[:, 0], 10.0))
+    assert_close(actual[:, 1], torch.full_like(actual[:, 1], 10.0))
+    assert_close(actual[:, 2], torch.full_like(actual[:, 2], 20.0))
+    assert_close(actual[:, 3], torch.full_like(actual[:, 3], 20.0))
+
+
+def test_invalid_gqa_ratio_is_rejected() -> None:
+    query = torch.randn(1, 3, 7, 8, device="cuda")
     key = torch.randn(1, 2, 7, 8, device="cuda")
     value = torch.randn(1, 2, 7, 8, device="cuda")
 
-    with pytest.raises(ValueError, match="requires Hq == Hkv"):
+    with pytest.raises(
+        ValueError,
+        match="query head count must be divisible",
+    ):
         triton_tiled_attention(query, key, value)

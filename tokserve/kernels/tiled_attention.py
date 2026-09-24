@@ -13,10 +13,7 @@ def triton_tiled_attention(
     *,
     query_position_offset: int = 0,
 ) -> torch.Tensor:
-    """Apply causal tiled attention to contiguous Q/K/V tensors.
-
-    This first version requires Hq == Hkv. GQA support is added separately.
-    """
+    """Apply causal tiled GQA to contiguous Q/K/V tensors."""
 
     if query.ndim != 4 or key.ndim != 4 or value.ndim != 4:
         raise ValueError("query, key, and value must have shape (B, H, T, Dh)")
@@ -27,8 +24,8 @@ def triton_tiled_attention(
     if query.shape[0] != key.shape[0]:
         raise ValueError("query and key batch sizes must match")
 
-    if query.shape[1] != key.shape[1]:
-        raise ValueError("first Triton tiled-attention kernel requires Hq == Hkv")
+    if query.shape[1] % key.shape[1] != 0:
+        raise ValueError("query head count must be divisible by KV head count")
 
     if query.shape[-1] != key.shape[-1]:
         raise ValueError("query and key head dimensions must match")
